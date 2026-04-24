@@ -1,0 +1,8 @@
+path: /home/rileydunn/Documents/575ML_Project/dataset
+train: images/train
+val: images/val
+test: images/test
+nc: 2
+names:
+- hole
+- mound
