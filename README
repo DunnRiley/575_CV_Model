@@ -31,3 +31,9 @@ python3 train_yolo.py \
 
 
 I am using a venv to keep track of python3 and yolo dependensies
+
+Metric       | All Classes | Hole  | Mound
+Precision    | 0.594       | 0.223 | 0.965
+Recall       | 0.557       | 0.162 | 0.952
+mAP@0.5      | 0.541       | 0.118 | 0.963
+mAP@0.5-0.95 | 0.445       | 0.033 | 0.858
