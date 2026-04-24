@@ -1,1 +1,1 @@
-/home/rileydunn/Documents/575ML_Project/data/labels/frame_0358.txt
+/home/rileydunn/Documents/575_CV_Model/data/labels/frame_0358.txt

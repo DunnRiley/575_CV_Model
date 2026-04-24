@@ -1,4 +1,4 @@
-path: /home/rileydunn/Documents/575ML_Project/dataset
+path: /home/rileydunn/Documents/575_CV_Model/dataset
 train: images/train
 val: images/val
 test: images/test

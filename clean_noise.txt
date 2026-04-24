@@ -1,0 +1,29 @@
+python3 -c "
+import cv2, numpy as np
+from pathlib import Path
+
+MIN_AREA = 200  # any component smaller than this gets removed
+
+files = sorted(Path('data/masks').glob('*.png'))
+print(f'Cleaning {len(files)} masks...')
+
+for f in files:
+    m = cv2.imread(str(f), cv2.IMREAD_GRAYSCALE)
+    if m is None:
+        continue
+
+    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(m)
+    
+    # Build clean mask keeping only components >= MIN_AREA
+    clean = np.zeros_like(m)
+    kept = 0
+    for i in range(1, num_labels):  # skip 0 = background
+        if stats[i, cv2.CC_STAT_AREA] >= MIN_AREA:
+            clean[labels == i] = 255
+            kept += 1
+
+    cv2.imwrite(str(f), clean)
+    print(f'  {f.name}: kept {kept} components')
+
+print('Done.')
+"
