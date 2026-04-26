@@ -1,95 +1,66 @@
 import cv2
 import numpy as np
-import open3d as o3d
 import os
 
-input_folder = "GoodData"
-output_folder = "GoodData_masks"
-
+input_folder = "cropped_data"
+output_folder = "cropped_data_masks"
 os.makedirs(output_folder, exist_ok=True)
 
-for filename in os.listdir(input_folder):
+OBSTACLE_THRESH = 15.0  # tune this if needed
 
+def jet_to_depth(color_img_bgr):
+    hsv = cv2.cvtColor(color_img_bgr, cv2.COLOR_BGR2HSV)
+    hue = hsv[:, :, 0].astype(np.float32)
+    val = hsv[:, :, 2]
+    invalid = (val < 10)
+    hue_clipped = np.clip(hue, 0, 120)
+    depth = (hue_clipped / 120.0 * 255.0).astype(np.float32)
+    depth[invalid] = 0.0
+    return depth
+
+for filename in os.listdir(input_folder):
     if not filename.lower().endswith(".png"):
         continue
 
     path = os.path.join(input_folder, filename)
-
-    # Load 16-bit depth image
-    depth = cv2.imread(path)
-    depth = cv2.cvtColor(depth, cv2.COLOR_BGR2GRAY)
-
-    depth = cv2.imread(path, cv2.IMREAD_UNCHANGED)
-
-    if depth is None:
+    color_img = cv2.imread(path, cv2.IMREAD_COLOR)
+    if color_img is None:
         continue
 
-    if len(depth.shape) == 3:
-        depth = cv2.cvtColor(depth, cv2.COLOR_BGR2GRAY)
-
+    depth = jet_to_depth(color_img)
     h, w = depth.shape
+    valid = (depth > 1.0) & (depth < 254.0)
 
-    # Convert mm → meters
-    depth = depth.astype(np.float32) / 1000.0
+    # Fit ground line from bottom rows
+    bottom_rows = np.arange(int(h * 0.6), int(h * 0.92))
+    row_median_depth = np.array([
+        np.median(depth[r, :][valid[r, :]]) if valid[r, :].sum() > 10 else np.nan
+        for r in bottom_rows
+    ])
 
-    h, w = depth.shape
-
-    # Downsample for speed
-    # depth = depth[::2, ::2]
-
-    h, w = depth.shape
-
-    # Camera intrinsics (approximate)
-    fx = fy = 500
-    cx = w / 2
-    cy = h / 2
-
-    # Pixel coordinate grid
-    u, v = np.meshgrid(np.arange(w), np.arange(h))
-
-    z = depth
-    x = (u - cx) * z / fx
-    y = (v - cy) * z / fy
-
-    # Build point cloud
-    points = np.stack((x, y, z), axis=-1).reshape(-1, 3)
-
-    # Remove invalid depth
-    valid = (points[:,2] > 0.1) & (points[:,2] < 5.0)
-    points = points[valid]
-
-    if len(points) < 100:
-        print("Skipping", filename)
+    good = ~np.isnan(row_median_depth)
+    if good.sum() < 5:
+        print(f"Skipping {filename}: not enough ground rows")
         continue
 
-    # Convert to Open3D point cloud
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(points)
+    coeffs = np.polyfit(bottom_rows[good], row_median_depth[good], 1)
+    slope, intercept = coeffs
+    all_rows = np.arange(h)
+    expected_per_row = slope * all_rows + intercept
+    expected = np.tile(expected_per_row[:, np.newaxis], (1, w))
 
-    # RANSAC plane detection
-    plane_model, inliers = pcd.segment_plane(
-        distance_threshold=0.01,
-        ransac_n=3,
-        num_iterations=1000
-    )
+    diff = depth.astype(np.float32) - expected.astype(np.float32)
+    diff[~valid] = 0.0
 
-    a, b, c, d = plane_model
+    obstacle_mask = (diff > OBSTACLE_THRESH) & valid
 
-    # Compute distance of every pixel to plane
-    points_full = np.stack((x, y, z), axis=-1).reshape(-1, 3)
+    kernel = np.ones((7, 7), np.uint8)
+    mask_u8 = obstacle_mask.astype(np.uint8) * 255
+    mask_u8 = cv2.morphologyEx(mask_u8, cv2.MORPH_CLOSE, kernel)
+    mask_u8 = cv2.morphologyEx(mask_u8, cv2.MORPH_OPEN, kernel)
+    mask_u8 = cv2.dilate(mask_u8, kernel, iterations=1)
 
-    dist = np.abs(points_full @ np.array([a, b, c]) + d) / np.sqrt(a*a + b*b + c*c)
+    cv2.imwrite(os.path.join(output_folder, filename), mask_u8)
+    print(f"Processed: {filename}")
 
-    height_map = dist.reshape(h, w)
-
-    # Obstacle mask
-    mask = height_map > 0.02
-    mask_img = (mask.astype(np.uint8)) * 255
-
-    output_path = os.path.join(output_folder, filename)
-
-    cv2.imwrite(output_path, mask_img)
-
-    print("Processed", filename)
-
-print("Finished batch processing")
+print("Done.")

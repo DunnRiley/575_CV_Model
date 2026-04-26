@@ -21,6 +21,9 @@ python3 prepare_dataset.py \
     --label_dir data/labels \
     --output_dir dataset
 
+# Compress images for Colab
+zip -r colab_zip_images.zip data/images data/masks mask_to_yolo.py prepare_dataset.py train_yolo.py
+
 # Train
 python3 train_yolo.py \
     --data dataset/dataset.yaml \
@@ -30,10 +33,22 @@ python3 train_yolo.py \
     --device cpu
 
 
-I am using a venv to keep track of python3 and yolo dependensies
 
+#I am using a venv to keep track of python3 and yolo dependensies
+source ~/rover_venv/bin/activate
+
+
+First attempt, to many small boundnig boxes from the noise and the images were not properly 
 Metric       | All Classes | Hole  | Mound
 Precision    | 0.594       | 0.223 | 0.965
 Recall       | 0.557       | 0.162 | 0.952
 mAP@0.5      | 0.541       | 0.118 | 0.963
 mAP@0.5-0.95 | 0.445       | 0.033 | 0.858
+
+
+Second attempt, the times we classify any bounding boxes we are always correct however we are missing a lot of objects. We are also not detecting any mounds, this is due to a verry small data set and most images dont have mounds, it is only finding holes. 
+Metric       | All Classes | Hole  | Mound
+Precision    | 1.0         | 1.0   | 1.0
+Recall       | 0.36        | 0.719 | 0.0
+mAP@0.5      | 0.403       | 0.806 | 0.0
+mAP@0.5-0.95 | 0.212       | 0.425 | 0.0
