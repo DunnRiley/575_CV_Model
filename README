@@ -52,3 +52,11 @@ Precision    | 1.0         | 1.0   | 1.0
 Recall       | 0.36        | 0.719 | 0.0
 mAP@0.5      | 0.403       | 0.806 | 0.0
 mAP@0.5-0.95 | 0.212       | 0.425 | 0.0
+
+
+Third attempt
+Metric       | Validation | Test
+Precision    | 0.86       | 0.973
+Recall       | 0.748      | 1.0
+mAP@0.5      | 0.936      | 0.995
+mAP@0.5-0.95 | 0.591      | 0.917
