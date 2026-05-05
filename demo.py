@@ -10,7 +10,7 @@ Usage:
   python3 demo.py \
       --weights  best.pt \
       --image_dir data_demo/images \
-      --mask_dir  data_demp/masks \
+      --mask_dir  data_demo/masks \
       --output_dir demo_output \
       [--conf 0.3] \
       [--fps 10]

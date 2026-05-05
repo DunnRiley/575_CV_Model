@@ -1,26 +1,3 @@
-"""
-prepare_dataset.py
-------------------
-Organises your images + YOLO labels into the standard Ultralytics folder
-structure and writes a dataset.yaml ready for training.
-
-Output layout:
-  dataset/
-    images/
-      train/   val/   test/
-    labels/
-      train/   val/   test/
-    dataset.yaml
-
-Usage:
-  python prepare_dataset.py \
-      --image_dir  data/images \
-      --label_dir  data/labels \
-      --output_dir dataset       \
-      [--train 0.7] [--val 0.2] [--test 0.1] \
-      [--seed 42] [--copy]   # use --copy to duplicate instead of symlink
-"""
-
 import argparse
 import os
 import random
@@ -28,9 +5,9 @@ import shutil
 import sys
 from pathlib import Path
 
-import yaml   # pip install pyyaml  (usually already installed)
+import yaml   # pip install pyyaml
 
-CLASSES = ["hole", "mound"]   # class index 0, 1  — must match mask_to_yolo.py
+CLASSES = ["hole", "mound"]   # class index 0, 1  must match mask_to_yolo.py
 
 
 def split_files(files, train_frac, val_frac, seed):
@@ -111,7 +88,6 @@ def main():
             copy_or_link(img_src, img_dst, args.copy)
             copy_or_link(lbl_src, lbl_dst, args.copy)
 
-    # ── dataset.yaml ──────────────────────────────────────────────────────────
     yaml_path = output_dir / "dataset.yaml"
     dataset_cfg = {
         "path": str(output_dir.resolve()),
@@ -124,12 +100,12 @@ def main():
     with open(yaml_path, "w") as f:
         yaml.dump(dataset_cfg, f, default_flow_style=False, sort_keys=False)
 
-    print("\n── Dataset prepared ─────────────────────────────────────────────")
+    print("\n Dataset prepared ─")
     print(f"  Train : {len(train_pairs)} samples")
     print(f"  Val   : {len(val_pairs)}   samples")
     print(f"  Test  : {len(test_pairs)}  samples")
     print(f"  YAML  : {yaml_path}")
-    print("─────────────────────────────────────────────────────────────────")
+    print("─")
     print("\nNext step:  python train_yolo.py --data", yaml_path)
 
 

@@ -28,10 +28,7 @@ import numpy as np
 from pathlib import Path
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Mask fix: flood-fill top white blob
-# ─────────────────────────────────────────────────────────────────────────────
-
 def fill_top_blob(mask: np.ndarray) -> np.ndarray:
     """
     Flood-fill the top invalid white region with black.
@@ -88,10 +85,7 @@ def process_mask(src_path: Path, dst_path: Path, visualize: bool, vis_dir: Path)
     return before, after
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Image fix: conservative chrome-only crop
-# ─────────────────────────────────────────────────────────────────────────────
-
 def process_image(src_path: Path, dst_path: Path,
                   img_top, img_y2, img_x1, img_x2):
     img = cv2.imread(str(src_path))
@@ -111,10 +105,7 @@ def process_image(src_path: Path, dst_path: Path,
     return True
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Main
-# ─────────────────────────────────────────────────────────────────────────────
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--og_mask_dir",   default="og_masks",
@@ -152,8 +143,8 @@ def main():
 
     print(f"Processing {len(mask_files)} masks and {len(img_files)} images...\n")
 
-    # ── Masks ─────────────────────────────────────────────────────────────────
-    print("── Flood-filling masks ──────────────────────────────────────")
+    #  Masks
+    print(" Flood-filling masks ")
     for mask_path in mask_files:
         result = process_mask(mask_path,
                               out_mask_dir / mask_path.name,
@@ -163,8 +154,8 @@ def main():
             removed = before - after
             print(f"  {mask_path.name}  {before} → {after} white px  (-{removed})")
 
-    # ── Images ────────────────────────────────────────────────────────────────
-    print(f"\n── Cropping images [{args.img_top}:{args.img_y2}, {args.img_x1}:{args.img_x2}] ──")
+    #  Images 
+    print(f"\n Cropping images [{args.img_top}:{args.img_y2}, {args.img_x1}:{args.img_x2}] ")
     done = 0
     for img_path in img_files:
         ok = process_image(img_path,
@@ -175,7 +166,7 @@ def main():
             done += 1
 
     print(f"  {done} images cropped.")
-    print(f"\n── Done ──────────────────────────────────────────────────────")
+    print(f"\n Done")
     print(f"  Masks  → {out_mask_dir}/")
     print(f"  Images → {out_img_dir}/")
     if args.visualize:

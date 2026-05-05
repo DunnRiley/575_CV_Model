@@ -1,19 +1,3 @@
-"""
-train_yolo.py
--------------
-Installs Ultralytics (if needed) and trains a YOLOv8 model on your dataset.
-
-Usage:
-  python train_yolo.py \
-      --data    dataset/dataset.yaml \
-      [--model  yolov8n.pt]          \   # n=nano, s=small, m=medium, l=large, x=xlarge
-      [--epochs 100]                 \
-      [--imgsz  640]                 \
-      [--batch  16]                  \
-      [--name   terrain_detector]    \
-      [--device cpu]                     # or 0 for first GPU, 0,1 for multi-GPU
-"""
-
 import argparse
 import subprocess
 import sys
@@ -47,7 +31,7 @@ def main():
 
     from ultralytics import YOLO  # import after ensure
 
-    # ── Load model ────────────────────────────────────────────────────────────
+    #  Load model 
     if args.resume:
         # Find the most recent last.pt
         from pathlib import Path
@@ -61,7 +45,7 @@ def main():
 
     model = YOLO(weights)
 
-    # ── Training hyperparameters ───────────────────────────────────────────────
+    #  Training hyperparameters
     train_kwargs = dict(
         data        = args.data,
         epochs      = args.epochs,
@@ -95,26 +79,26 @@ def main():
     if args.resume:
         train_kwargs["resume"] = True
 
-    # ── Train ─────────────────────────────────────────────────────────────────
-    print("\n── Starting training ────────────────────────────────────────────")
+    #  Train ─
+    print("\n Starting training ")
     print(f"  Model   : {weights}")
     print(f"  Data    : {args.data}")
     print(f"  Epochs  : {args.epochs}  |  Batch: {args.batch}  |  ImgSz: {args.imgsz}")
-    print("─────────────────────────────────────────────────────────────────\n")
+    print("─\n")
 
     results = model.train(**train_kwargs)
 
-    # ── Validate on test split ────────────────────────────────────────────────
-    print("\n── Running test-set validation ──────────────────────────────────")
+    #  Validate on test split 
+    print("\n Running test-set validation ")
     best_weights = f"runs/detect/{args.name}/weights/best.pt"
     best_model   = YOLO(best_weights)
     metrics = best_model.val(data=args.data, split="test", imgsz=args.imgsz)
 
-    print("\n── Results ──────────────────────────────────────────────────────")
+    print("\n Results ")
     print(f"  mAP@0.5      : {metrics.box.map50:.4f}")
     print(f"  mAP@0.5:0.95 : {metrics.box.map:.4f}")
     print(f"  Best weights : {best_weights}")
-    print("─────────────────────────────────────────────────────────────────")
+    print("─")
 
 
 if __name__ == "__main__":

@@ -1,9 +1,11 @@
 Project made with python to collect, clean, and train a model for object detection on RGBD images.
-The model is going to be used to detect rocks and creators in a depth image.
-The first step was to turn a video of the depth and rgb image into frames, this was done with an online resorce.
-Second, RANSAC was used to create a ground plane that shows any obsticals that might be obove or bellow the ground.
-Third, DBSCAN and DGSCAN was used to make labels and bounding boxes for any obsical
-Final the model was trained using YOLOv8
+The model will be used to detect rocks and creators in a depth image.
+The first step was to convert a video of the depth and RGB image into frames, which was done using an online resource.
+Second, RANSAC was used to create a ground plane that shows any obstacles that might be above or below the ground.
+Third, DBSCAN and DGSCAN were used to make labels and bounding boxes for any object.
+Finally, the model was trained using YOLOv8
+
+
 
 # RANSAC
 python3 ransac_pipeline.py

@@ -1,34 +1,3 @@
-"""
-mask_to_yolo.py
----------------
-Takes paired (image, mask) files and uses DBSCAN clustering on the white
-mask pixels to generate YOLO-format bounding box labels.
-
-Classes:
-  0 = hole / depression  (large regions, below ground plane)
-  1 = mound              (smaller regions, above ground plane)
-
-Key improvements over v1:
-  - Pixel downsampling for speed on large masks
-  - Box merging: nearby/overlapping boxes of the same class are merged into one
-  - Min/max box size filtering to remove tiny noise and encourage large hole boxes
-  - Area-based class assignment: large blobs = hole, small = mound
-
-Usage:
-  python3 mask_to_yolo.py \
-      --image_dir  data/images \
-      --mask_dir   data/masks  \
-      --label_dir  data/labels \
-      [--downsample 5]          \
-      [--eps 20]                \
-      [--min_samples 5]         \
-      [--min_blob_area 30]      \
-      [--min_box_wh 0.03]       \
-      [--merge_iou 0.1]         \
-      [--area_threshold 300]    \
-      [--visualize]
-"""
-
 import argparse
 import sys
 import cv2
@@ -41,9 +10,7 @@ except ImportError:
     sys.exit("scikit-learn not found. Run: pip install scikit-learn")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Clustering
-# ─────────────────────────────────────────────────────────────────────────────
 
 def load_mask(path):
     img = cv2.imread(str(path), cv2.IMREAD_GRAYSCALE)
@@ -74,9 +41,7 @@ def cluster_to_bbox(cluster):
     return int(x_min), int(y_min), int(x_max), int(y_max)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Box merging
-# ─────────────────────────────────────────────────────────────────────────────
 
 def box_iou(b1, b2):
     """Intersection over Union for two (x1,y1,x2,y2) boxes."""
@@ -143,9 +108,7 @@ def merge_boxes(boxes, merge_iou=0.1, merge_dist=0.5):
     return boxes
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Classification & formatting
-# ─────────────────────────────────────────────────────────────────────────────
 
 def classify_by_area(cluster, area_threshold):
     """
@@ -163,9 +126,7 @@ def bbox_to_yolo(x_min, y_min, x_max, y_max, img_w, img_h):
     return cx, cy, w, h
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Per-image processing
-# ─────────────────────────────────────────────────────────────────────────────
 
 def process_one(image_path, mask_path, label_path,
                 eps, min_samples, downsample, min_blob_area,
@@ -187,7 +148,7 @@ def process_one(image_path, mask_path, label_path,
     clusters = dbscan_clusters(mask, eps=eps, min_samples=min_samples,
                                downsample=downsample)
 
-    # ── Per-cluster: filter tiny blobs, classify, get bbox ───────────────────
+    #  Per-cluster: filter tiny blobs, classify, get bbox
     # Group bboxes by class for per-class merging
     class_boxes = {0: [], 1: []}
 
@@ -198,7 +159,7 @@ def process_one(image_path, mask_path, label_path,
         bbox = cluster_to_bbox(cluster)
         class_boxes[cls].append(bbox)
 
-    # ── Merge boxes within each class ────────────────────────────────────────
+    #  Merge boxes within each class 
     lines = []
     vis_image = image.copy() if visualize else None
 
@@ -236,9 +197,7 @@ def process_one(image_path, mask_path, label_path,
     return len(lines)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Main
-# ─────────────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(description="DBSCAN mask → YOLO labels")

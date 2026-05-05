@@ -64,9 +64,6 @@ for filename in os.listdir(input_folder):
     normal = np.array([a, b, c])
     normal /= np.linalg.norm(normal)
 
-    # ── KEY FIX: your depth image is inverted (bright=far, dark=near is flipped)
-    # Obstacles are CLOSER than ground → they have LOWER z → negative signed dist
-    # So flip: we want normal pointing toward the camera (positive z component)
     if normal[2] < 0:
         normal = -normal
         d = -d
@@ -82,9 +79,6 @@ for filename in os.listdir(input_folder):
     signed_dist[~valid_depth] = 0.0
 
     print(f"  signed_dist min={signed_dist.min():.3f} max={signed_dist.max():.3f}")
-
-    # ── Obstacles are BELOW the plane in signed dist (they're closer to camera)
-    # So threshold on NEGATIVE signed distance
     obstacle_mask = (signed_dist < -OBSTACLE_HEIGHT_THRESH) & valid_depth
 
     print(f"  obstacle pixels: {obstacle_mask.sum()}")
@@ -94,9 +88,7 @@ for filename in os.listdir(input_folder):
     mask_u8 = cv2.morphologyEx(mask_u8, cv2.MORPH_OPEN, kernel)
     mask_u8 = cv2.dilate(mask_u8, kernel, iterations=1)
 
-    # Debug: visualize signed dist with obstacle highlighted
     sd_vis = signed_dist.copy()
-    # Normalize so negative (obstacles) appear bright
     sd_neg = np.clip(-signed_dist, 0, None)
     sd_vis_norm = cv2.normalize(sd_neg, None, 0, 255, cv2.NORM_MINMAX)
     cv2.imwrite(os.path.join(output_folder, f"DEBUG_{filename}"), sd_vis_norm.astype(np.uint8))
